@@ -1,0 +1,5 @@
+{
+  "model_type": "unet",
+  "framework": "pytorch",
+  "task": "image-segmentation"
+}
