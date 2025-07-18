@@ -3,7 +3,7 @@ import os
 import sys
 
 # === Configuration ===
-REPO_ID = "AndaiMD/brain-unet-model"   # Change if your repo name is different
+REPO_ID = "AndaiMD/brain-unet-model" 
 FOLDER_PATH = "brain_unet_model"       # The folder that contains your model files
 REPO_TYPE = "model"
 
