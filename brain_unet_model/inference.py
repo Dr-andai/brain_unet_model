@@ -1,33 +1,30 @@
-import torch
-import torch.nn.functional as F
+from transformers import AutoModel, AutoConfig
 from PIL import Image
-import numpy as np
-import torchvision.transforms as T
+import torch
+from torchvision import transforms
 from unet import UNet
 
 # Define model
-model = UNet(in_channels=1, out_channels=3)
-state_dict = torch.load("unet_epoch20.pth", map_location="cpu")
-model.load_state_dict(state_dict)
+# model = UNet(in_channels=1, out_channels=3)
+# state_dict = torch.load("unet_epoch20.pth", map_location="cpu")
+# model.load_state_dict(state_dict)
+# model.eval()
+
+config = AutoConfig.from_pretrained(".")
+model = AutoModel.from_pretrained(".", config=config)
 model.eval()
 
-transform = T.Compose([
-    T.Grayscale(),  # In case image is RGB
-    T.Resize((256, 256)),
-    T.ToTensor(),
+# Define preprocessing
+preprocess = transforms.Compose([
+    transforms.Grayscale(),
+    transforms.Resize((config.image_size, config.image_size)),
+    transforms.ToTensor(),
 ])
 
-# def predict(image: Image.Image):
-#     img_tensor = transform(image).unsqueeze(0)
-#     with torch.no_grad():
-#         output = model(img_tensor)
-#         pred = torch.argmax(F.softmax(output, dim=1), dim=1)
-#     return pred.squeeze().numpy().tolist()  # list is JSON-serializable
-
+# Define inference function
 def predict(image: Image.Image) -> Image.Image:
-    input_tensor = transform(image).unsqueeze(0)  # (1, C, H, W)
+    input_tensor = preprocess(image).unsqueeze(0)  # Shape: (1, C, H, W)
     with torch.no_grad():
-        output = model(input_tensor)[0]
-    output = torch.argmax(output, dim=0).byte().cpu()
-    output_pil = T.ToPILImage()(output)
-    return output_pil
+        output = model(input_tensor).squeeze(0)     # Shape: (3, H, W)
+        prediction = torch.argmax(output, dim=0).byte()  # Shape: (H, W)
+    return transforms.ToPILImage()(prediction)
