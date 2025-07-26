@@ -17,9 +17,17 @@ transform = T.Compose([
     T.ToTensor(),
 ])
 
-def predict(image: Image.Image):
-    img_tensor = transform(image).unsqueeze(0)
+# def predict(image: Image.Image):
+#     img_tensor = transform(image).unsqueeze(0)
+#     with torch.no_grad():
+#         output = model(img_tensor)
+#         pred = torch.argmax(F.softmax(output, dim=1), dim=1)
+#     return pred.squeeze().numpy().tolist()  # list is JSON-serializable
+
+def predict(image: Image.Image) -> Image.Image:
+    input_tensor = transform(image).unsqueeze(0)  # (1, C, H, W)
     with torch.no_grad():
-        output = model(img_tensor)
-        pred = torch.argmax(F.softmax(output, dim=1), dim=1)
-    return pred.squeeze().numpy().tolist()  # list is JSON-serializable
+        output = model(input_tensor)[0]
+    output = torch.argmax(output, dim=0).byte().cpu()
+    output_pil = T.ToPILImage()(output)
+    return output_pil
